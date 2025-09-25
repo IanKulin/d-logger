@@ -6,7 +6,8 @@
 
 - **Multiple log levels**: silent, error, warn, info, debug
 - **Flexible output formats**: JSON or simple text
-- **Caller detection**: Automatically identifies source file and line number based on log level
+- **Caller detection**: Automatically identifies source file and line number
+  based on log level
 - **Color support**: Automatic TTY detection with colored output
 
 ## Install
@@ -27,8 +28,8 @@ $ deno run --allow-env --allow-sys your-script.js
 import Logger from "@iankulin/logger";
 
 const logger = new Logger();
-logger.info('Hello from logger');
-logger.error('Something went wrong');
+logger.info("Hello from logger");
+logger.error("Something went wrong");
 ```
 
 ## Usage Examples
@@ -37,12 +38,12 @@ logger.error('Something went wrong');
 
 ```typescript
 import Logger from "@iankulin/logger";
-const logger = new Logger({ level: 'info' });
+const logger = new Logger({ level: "info" });
 
-logger.error('Critical error occurred');
-logger.warn('This is a warning');
-logger.info('Informational message');
-logger.debug('Debug info'); // Won't be shown (level is 'info')
+logger.error("Critical error occurred");
+logger.warn("This is a warning");
+logger.info("Informational message");
+logger.debug("Debug info"); // Won't be shown (level is 'info')
 ```
 
 ### Log Levels
@@ -56,17 +57,17 @@ The logger supports five log levels (from least to most verbose):
 - `debug` - All messages
 
 ```typescript
-const logger = new Logger({ level: 'debug' });
+const logger = new Logger({ level: "debug" });
 
 // All of these will be logged
-logger.error('Error message');
-logger.warn('Warning message');
-logger.info('Info message');
-logger.debug('Debug message');
+logger.error("Error message");
+logger.warn("Warning message");
+logger.info("Info message");
+logger.debug("Debug message");
 
 // Change level dynamically
-logger.level('error');
-logger.info('This will not be logged');
+logger.level("error");
+logger.info("This will not be logged");
 
 // Get current level
 console.log(logger.level()); // 'error'
@@ -77,8 +78,8 @@ console.log(logger.level()); // 'error'
 #### JSON Format (Default)
 
 ```typescript
-const logger = new Logger({ format: 'json' });
-logger.info('Hello world');
+const logger = new Logger({ format: "json" });
+logger.info("Hello world");
 ```
 
 ```json
@@ -97,8 +98,8 @@ logger.info('Hello world');
 #### Simple Format
 
 ```typescript
-const logger = new Logger({ format: 'simple' });
-logger.error('Something failed');
+const logger = new Logger({ format: "simple" });
+logger.error("Something failed");
 ```
 
 ```
@@ -107,22 +108,23 @@ logger.error('Something failed');
 
 ### Message Formatting
 
-The logger supports `util.format()` style message formatting with placeholders like `%s`, `%d`, `%j`.
+The logger supports `util.format()` style message formatting with placeholders
+like `%s`, `%d`, `%j`.
 
 ```typescript
-const logger = new Logger({ format: 'json' });
+const logger = new Logger({ format: "json" });
 
 // String formatting
-logger.info('User %s has %d points', 'john', 100);
+logger.info("User %s has %d points", "john", 100);
 // Output: {"level":"info","msg":"User john has 100 points",...}
 
 // JSON formatting
-logger.info('Config: %j', { debug: true, port: 3000 });
+logger.info("Config: %j", { debug: true, port: 3000 });
 // Output: {"level":"info","msg":"Config: {\"debug\":true,\"port\":3000}",...}
 
 // Simple format example
-const simpleLogger = new Logger({ format: 'simple' });
-simpleLogger.warn('Processing file %s (%d bytes)', 'data.txt', 1024);
+const simpleLogger = new Logger({ format: "simple" });
+simpleLogger.warn("Processing file %s (%d bytes)", "data.txt", 1024);
 // Output: [2025-07-05 10:30] [WARN ] [app.js:15] Processing file data.txt (1024 bytes)
 ```
 
@@ -131,26 +133,28 @@ simpleLogger.warn('Processing file %s (%d bytes)', 'data.txt', 1024);
 ```typescript
 const logger = new Logger({
   colours: {
-    error: '\x1b[31m', // Red
-    warn: '\x1b[93m', // Bright yellow
-    info: '\x1b[36m', // Cyan
-    debug: '\x1b[90m', // Dark gray
+    error: "\x1b[31m", // Red
+    warn: "\x1b[93m", // Bright yellow
+    info: "\x1b[36m", // Cyan
+    debug: "\x1b[90m", // Dark gray
   },
 });
 ```
 
 ### Caller Level Control
 
-Control when caller information (file and line number) is included in log messages. This is useful for performance optimization since caller detection can be expensive.
+Control when caller information (file and line number) is included in log
+messages. This is useful for performance optimization since caller detection can
+be expensive.
 
 ```typescript
 // Default: only include caller info for warnings and errors
-const logger = new Logger({ callerLevel: 'warn' });
+const logger = new Logger({ callerLevel: "warn" });
 
-logger.error('Critical error'); // Includes caller info
-logger.warn('Warning message'); // Includes caller info
-logger.info('Info message'); // No caller info
-logger.debug('Debug message'); // No caller info
+logger.error("Critical error"); // Includes caller info
+logger.warn("Warning message"); // Includes caller info
+logger.info("Info message"); // No caller info
+logger.debug("Debug message"); // No caller info
 ```
 
 **JSON Format Output:**
@@ -175,7 +179,9 @@ logger.debug('Debug message'); // No caller info
 - `'info'` - Include caller info for info, warnings, and errors
 - `'debug'` - Always include caller info
 
-**Performance Tip:** For production applications that primarily log info/debug messages, setting `callerLevel: 'error'` can significantly improve performance by avoiding expensive stack trace analysis for routine logging.
+**Performance Tip:** For production applications that primarily log info/debug
+messages, setting `callerLevel: 'error'` can significantly improve performance
+by avoiding expensive stack trace analysis for routine logging.
 
 ## Constructor Options
 
@@ -194,19 +200,19 @@ import Logger from "@iankulin/logger";
 
 // Production: JSON format with environment-based level
 const prodLogger = new Logger({
-  level: Deno.env.get('LOG_LEVEL') || 'info',
-  format: 'json',
-  callerLevel: 'error', // Performance optimization
+  level: Deno.env.get("LOG_LEVEL") || "info",
+  format: "json",
+  callerLevel: "error", // Performance optimization
 });
 
 // Development: Simple format with debug level
 const devLogger = new Logger({
-  level: 'debug',
-  format: 'simple',
+  level: "debug",
+  format: "simple",
 });
 
 // Testing: Silent mode
-const testLogger = new Logger({ level: 'silent' });
+const testLogger = new Logger({ level: "silent" });
 ```
 
 ## Requirements
@@ -220,7 +226,8 @@ const testLogger = new Logger({ level: 'silent' });
 ## Versions
 
 - **1.0.0** - JSR release with full Deno support
-  - Migrated from [npm version](https://www.npmjs.com/package/@iankulin/logger) to JSR (JavaScript Registry)
+  - Migrated from [npm version](https://www.npmjs.com/package/@iankulin/logger)
+    to JSR (JavaScript Registry)
   - Full TypeScript support
   - Native Deno compatibility
 

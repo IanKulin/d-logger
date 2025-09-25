@@ -1,10 +1,10 @@
-import { assertEquals, assert } from "@std/assert";
-import Logger from '../lib/logger.ts';
+import { assert, assertEquals } from "@std/assert";
+import Logger from "../lib/logger.ts";
 import {
-  setupMocks,
-  getCapturedLogs,
   clearCapturedLogs,
-} from './helpers/logger-test-helpers.js';
+  getCapturedLogs,
+  setupMocks,
+} from "./helpers/logger-test-helpers.js";
 
 // Setup and teardown for all tests
 setupMocks();
@@ -14,12 +14,12 @@ Deno.test("Logger Robustness - Edge Cases and Data Handling - should not crash o
   const logger = new Logger();
 
   // This should not throw
-  logger.info('test message');
+  logger.info("test message");
 });
 
 Deno.test("Logger Robustness - Edge Cases and Data Handling - should handle undefined and null messages gracefully", () => {
   clearCapturedLogs();
-  const logger = new Logger({ format: 'json' });
+  const logger = new Logger({ format: "json" });
 
   // These should not crash
   logger.info(undefined);
@@ -31,14 +31,14 @@ Deno.test("Logger Robustness - Edge Cases and Data Handling - should handle unde
   const parsed1 = JSON.parse(logs[0]);
   const parsed2 = JSON.parse(logs[1]);
 
-  assertEquals(parsed1.msg, 'undefined');
-  assertEquals(parsed2.msg, 'null');
+  assertEquals(parsed1.msg, "undefined");
+  assertEquals(parsed2.msg, "null");
 });
 
 Deno.test("Logger Robustness - Edge Cases and Data Handling - should handle extremely large messages", () => {
   clearCapturedLogs();
-  const logger = new Logger({ format: 'json' });
-  const hugeMessage = 'x'.repeat(100000);
+  const logger = new Logger({ format: "json" });
+  const hugeMessage = "x".repeat(100000);
 
   logger.info(hugeMessage);
 
@@ -48,12 +48,12 @@ Deno.test("Logger Robustness - Edge Cases and Data Handling - should handle extr
 
 Deno.test("Logger Robustness - Edge Cases and Data Handling - should handle circular objects in message formatting", () => {
   clearCapturedLogs();
-  const logger = new Logger({ format: 'json' });
+  const logger = new Logger({ format: "json" });
 
-  const circular = { name: 'test' };
+  const circular = { name: "test" };
   circular.self = circular;
 
-  logger.info('Circular: %j', circular);
+  logger.info("Circular: %j", circular);
 
   // Should still log something
   assertEquals(getCapturedLogs().length, 1);
@@ -61,7 +61,7 @@ Deno.test("Logger Robustness - Edge Cases and Data Handling - should handle circ
 
 Deno.test("Logger Robustness - Performance and Memory - should handle rapid consecutive logging without issues", () => {
   clearCapturedLogs();
-  const logger = new Logger({ format: 'json' });
+  const logger = new Logger({ format: "json" });
 
   for (let i = 0; i < 1000; i++) {
     logger.info(`rapid message ${i}`);
@@ -72,7 +72,7 @@ Deno.test("Logger Robustness - Performance and Memory - should handle rapid cons
 
 Deno.test("Logger Robustness - Performance and Memory - should handle repeated logging operations efficiently", () => {
   clearCapturedLogs();
-  const logger = new Logger({ format: 'simple' });
+  const logger = new Logger({ format: "simple" });
 
   const startTime = Date.now();
 
@@ -91,8 +91,8 @@ Deno.test("Logger Robustness - Performance and Memory - should handle repeated l
 
 Deno.test("Logger Robustness - Performance and Memory - should handle mixed format types in rapid succession", () => {
   clearCapturedLogs();
-  const jsonLogger = new Logger({ format: 'json' });
-  const simpleLogger = new Logger({ format: 'simple' });
+  const jsonLogger = new Logger({ format: "json" });
+  const simpleLogger = new Logger({ format: "simple" });
 
   for (let i = 0; i < 50; i++) {
     jsonLogger.info(`json message ${i}`);
@@ -104,40 +104,40 @@ Deno.test("Logger Robustness - Performance and Memory - should handle mixed form
 
 Deno.test("Logger Robustness - Complex Data Structures - should handle deeply nested objects", () => {
   clearCapturedLogs();
-  const logger = new Logger({ format: 'json' });
+  const logger = new Logger({ format: "json" });
 
   const deepObject = {
-    level1: { level2: { level3: { level4: { value: 'deep' } } } },
+    level1: { level2: { level3: { level4: { value: "deep" } } } },
   };
 
-  logger.info('Deep object: %j', deepObject);
+  logger.info("Deep object: %j", deepObject);
 
   assertEquals(getCapturedLogs().length, 1);
 });
 
 Deno.test("Logger Robustness - Complex Data Structures - should handle arrays with mixed data types", () => {
   clearCapturedLogs();
-  const logger = new Logger({ format: 'json' });
+  const logger = new Logger({ format: "json" });
 
   const mixedArray = [
     1,
-    'string',
+    "string",
     { obj: true },
     [1, 2, 3],
     null,
     undefined,
   ];
 
-  logger.info('Mixed array: %j', mixedArray);
+  logger.info("Mixed array: %j", mixedArray);
 
   assertEquals(getCapturedLogs().length, 1);
 });
 
 Deno.test("Logger Robustness - Complex Data Structures - should handle special characters and unicode", () => {
   clearCapturedLogs();
-  const logger = new Logger({ format: 'json' });
+  const logger = new Logger({ format: "json" });
 
-  const specialMessage = 'Special chars: \n\t\r\\"\'🚀 Unicode: こんにちは';
+  const specialMessage = "Special chars: \n\t\r\\\"'🚀 Unicode: こんにちは";
 
   logger.info(specialMessage);
 

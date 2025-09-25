@@ -9,7 +9,7 @@ const originalIsTTY = Deno.stdout.isTerminal();
 
 export function mockConsole() {
   console.log = (...args) => {
-    capturedLogs.push(args.join(' '));
+    capturedLogs.push(args.join(" "));
   };
 }
 
@@ -74,7 +74,7 @@ export function restoreMocks() {
 // Helper to get parsed JSON from first captured log
 export function getFirstLogAsJSON() {
   if (capturedLogs.length === 0) {
-    throw new Error('No logs captured');
+    throw new Error("No logs captured");
   }
   return JSON.parse(capturedLogs[0]);
 }

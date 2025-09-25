@@ -1,89 +1,89 @@
-import { assertEquals, assertThrows, assert } from "@std/assert";
-import Logger from '../lib/logger.ts';
+import { assert, assertEquals, assertThrows } from "@std/assert";
+import Logger from "../lib/logger.ts";
 import {
-  setupMocks,
-  getCapturedLogs,
+  clearCapturedErrors,
   clearCapturedLogs,
   getCapturedErrors,
-  clearCapturedErrors,
-} from './helpers/logger-test-helpers.js';
+  getCapturedLogs,
+  setupMocks,
+} from "./helpers/logger-test-helpers.js";
 
 // Setup and teardown for all tests
 setupMocks();
 
 Deno.test("Logger Additional Fallback Tests - JSON Formatter Error Handling - should handle circular references in log data", () => {
   clearCapturedLogs();
-  const logger = new Logger({ format: 'json' });
+  const logger = new Logger({ format: "json" });
 
   // Create circular reference
-  const obj = { name: 'test' };
+  const obj = { name: "test" };
   obj.self = obj;
 
-  logger.info('Message with circular ref: %j', obj);
+  logger.info("Message with circular ref: %j", obj);
 
   assertEquals(getCapturedLogs().length, 1);
   const logOutput = getCapturedLogs()[0];
 
   // Should be valid JSON despite circular reference
   const parsed = JSON.parse(logOutput);
-  assertEquals(parsed.level, 'info');
+  assertEquals(parsed.level, "info");
   // Check for either jsonError or that the message was logged successfully
   assert(
-    parsed.jsonError?.includes('JSON stringify failed') ||
-      parsed.msg.includes('Message with circular ref')
+    parsed.jsonError?.includes("JSON stringify failed") ||
+      parsed.msg.includes("Message with circular ref"),
   );
 });
 
 Deno.test("Logger Additional Fallback Tests - JSON Formatter Error Handling - should handle objects with non-serializable properties", () => {
   clearCapturedLogs();
-  const logger = new Logger({ format: 'json' });
+  const logger = new Logger({ format: "json" });
 
   // Create object with function (non-serializable)
   const objWithFunction = {
-    name: 'test',
+    name: "test",
     func: function () {
-      return 'hello';
+      return "hello";
     },
-    symbol: Symbol('test'),
+    symbol: Symbol("test"),
     undefined: undefined,
   };
 
-  logger.info('Object: %j', objWithFunction);
+  logger.info("Object: %j", objWithFunction);
 
   assertEquals(getCapturedLogs().length, 1);
   const logOutput = getCapturedLogs()[0];
 
   // Should produce valid JSON
   const parsed = JSON.parse(logOutput);
-  assertEquals(parsed.level, 'info');
+  assertEquals(parsed.level, "info");
   // Should have the message in some form
-  assert(parsed.msg.includes('Object:'));
+  assert(parsed.msg.includes("Object:"));
 });
 
 Deno.test("Logger Additional Fallback Tests - JSON Formatter Error Handling - should handle when JSON formatter itself is broken", () => {
   clearCapturedLogs();
-  const logger = new Logger({ format: 'json' });
+  const logger = new Logger({ format: "json" });
 
   // Break the JSON formatter
   logger.formatters.json = function () {
-    throw new Error('JSON formatter is broken');
+    throw new Error("JSON formatter is broken");
   };
 
-  logger.info('test message');
+  logger.info("test message");
 
   // Should still produce some output (last resort fallback)
   assertEquals(getCapturedLogs().length, 1);
   const logOutput = getCapturedLogs()[0];
 
   // Should contain the message even if not perfectly formatted
-  assert(logOutput.includes('test message'));
+  assert(logOutput.includes("test message"));
 });
 
 Deno.test("Logger Additional Fallback Tests - Caller Detection Error Handling - should handle stack manipulation errors", () => {
   clearCapturedLogs();
   clearCapturedErrors();
 
-  const logger = new Logger({ format: 'json', callerLevel: 'info' });
+  const logger = new Logger({ format: "json", callerLevel: "info" });
 
   // Override getCallerInfo to simulate an error
   const originalGetCallerInfo = logger.getCallerInfo;
@@ -91,26 +91,26 @@ Deno.test("Logger Additional Fallback Tests - Caller Detection Error Handling - 
     this.callerErrorCount++;
     if (this.callerErrorCount <= this.maxCallerErrors) {
       console.error(
-        'Error retrieving caller info:',
-        new Error('Simulated caller error')
+        "Error retrieving caller info:",
+        new Error("Simulated caller error"),
       );
       if (this.callerErrorCount === this.maxCallerErrors) {
         console.error(
-          `Caller detection failed ${this.maxCallerErrors} times. Suppressing further caller error messages.`
+          `Caller detection failed ${this.maxCallerErrors} times. Suppressing further caller error messages.`,
         );
       }
     }
-    return { callerFile: 'unknown', callerLine: 0 };
+    return { callerFile: "unknown", callerLine: 0 };
   };
 
   try {
-    logger.info('test with simulated caller error');
+    logger.info("test with simulated caller error");
 
     // Should still log the message
     assertEquals(getCapturedLogs().length, 1);
     const parsed = JSON.parse(getCapturedLogs()[0]);
-    assertEquals(parsed.msg, 'test with simulated caller error');
-    assertEquals(parsed.callerFile, 'unknown');
+    assertEquals(parsed.msg, "test with simulated caller error");
+    assertEquals(parsed.callerFile, "unknown");
     assertEquals(parsed.callerLine, 0);
 
     // Should have logged an error about caller detection
@@ -125,7 +125,7 @@ Deno.test("Logger Additional Fallback Tests - Caller Detection Error Handling - 
   clearCapturedLogs();
   clearCapturedErrors();
 
-  const logger = new Logger({ format: 'json', callerLevel: 'info' });
+  const logger = new Logger({ format: "json", callerLevel: "info" });
 
   // Override getCallerInfo to always simulate errors
   const originalGetCallerInfo = logger.getCallerInfo;
@@ -133,16 +133,16 @@ Deno.test("Logger Additional Fallback Tests - Caller Detection Error Handling - 
     this.callerErrorCount++;
     if (this.callerErrorCount <= this.maxCallerErrors) {
       console.error(
-        'Error retrieving caller info:',
-        new Error('Always fails')
+        "Error retrieving caller info:",
+        new Error("Always fails"),
       );
       if (this.callerErrorCount === this.maxCallerErrors) {
         console.error(
-          `Caller detection failed ${this.maxCallerErrors} times. Suppressing further caller error messages.`
+          `Caller detection failed ${this.maxCallerErrors} times. Suppressing further caller error messages.`,
         );
       }
     }
-    return { callerFile: 'unknown', callerLine: 0 };
+    return { callerFile: "unknown", callerLine: 0 };
   };
 
   try {
@@ -163,8 +163,8 @@ Deno.test("Logger Additional Fallback Tests - Caller Detection Error Handling - 
     const suppressionFound = errorLogs.some((errorArgs) =>
       errorArgs.some(
         (arg) =>
-          typeof arg === 'string' &&
-          arg.includes('Suppressing further caller error messages')
+          typeof arg === "string" &&
+          arg.includes("Suppressing further caller error messages"),
       )
     );
     assert(suppressionFound);
@@ -178,50 +178,50 @@ Deno.test("Logger Additional Fallback Tests - Caller Detection Error Handling - 
   clearCapturedLogs();
   clearCapturedErrors();
 
-  const logger = new Logger({ format: 'json', callerLevel: 'info' });
+  const logger = new Logger({ format: "json", callerLevel: "info" });
 
   // Override getCallerInfo to simulate different phases
   const originalGetCallerInfo = logger.getCallerInfo;
-  let phase = 'error1';
+  let phase = "error1";
 
   logger.getCallerInfo = function () {
-    if (phase === 'error1') {
+    if (phase === "error1") {
       this.callerErrorCount++;
       if (this.callerErrorCount <= this.maxCallerErrors) {
         console.error(
-          'Error retrieving caller info:',
-          new Error('Phase 1 error')
+          "Error retrieving caller info:",
+          new Error("Phase 1 error"),
         );
       }
-      return { callerFile: 'unknown', callerLine: 0 };
-    } else if (phase === 'working') {
+      return { callerFile: "unknown", callerLine: 0 };
+    } else if (phase === "working") {
       // Reset error count on successful call
       this.callerErrorCount = 0;
       return originalGetCallerInfo.call(this);
-    } else if (phase === 'error2') {
+    } else if (phase === "error2") {
       this.callerErrorCount++;
       if (this.callerErrorCount <= this.maxCallerErrors) {
         console.error(
-          'Error retrieving caller info:',
-          new Error('Phase 2 error')
+          "Error retrieving caller info:",
+          new Error("Phase 2 error"),
         );
       }
-      return { callerFile: 'unknown', callerLine: 0 };
+      return { callerFile: "unknown", callerLine: 0 };
     }
   };
 
   try {
     // Cause some errors
-    logger.info('test 1');
-    logger.info('test 2');
+    logger.info("test 1");
+    logger.info("test 2");
 
     // Switch to working mode
-    phase = 'working';
-    logger.info('test 3');
+    phase = "working";
+    logger.info("test 3");
 
     // Break it again
-    phase = 'error2';
-    logger.info('test 4');
+    phase = "error2";
+    logger.info("test 4");
 
     const errorLogs = getCapturedErrors();
     // Should have errors from both phases
@@ -234,20 +234,24 @@ Deno.test("Logger Additional Fallback Tests - Caller Detection Error Handling - 
 
 Deno.test("Logger Additional Fallback Tests - Extreme Error Conditions - should handle when console.log itself throws", () => {
   clearCapturedLogs();
-  const logger = new Logger({ format: 'json' });
+  const logger = new Logger({ format: "json" });
 
   // Break console.log
   const originalLog = console.log;
   console.log = function () {
-    throw new Error('Console is broken');
+    throw new Error("Console is broken");
   };
 
   try {
     // This should not crash the process, but the error will bubble up
     // since there's no try-catch around console.log in the logger
-    assertThrows(() => {
-      logger.info('test message');
-    }, Error, "Console is broken");
+    assertThrows(
+      () => {
+        logger.info("test message");
+      },
+      Error,
+      "Console is broken",
+    );
   } finally {
     console.log = originalLog;
   }
@@ -255,20 +259,20 @@ Deno.test("Logger Additional Fallback Tests - Extreme Error Conditions - should 
 
 Deno.test("Logger Additional Fallback Tests - Extreme Error Conditions - should handle when util.format has issues with complex objects", () => {
   setupMocks();
-  const logger = new Logger({ format: 'json' });
+  const logger = new Logger({ format: "json" });
 
   // Create an object that will cause issues with string conversion
   const problematicObject = {
     toString: function () {
-      throw new Error('toString failed');
+      throw new Error("toString failed");
     },
     valueOf: function () {
-      throw new Error('valueOf failed');
+      throw new Error("valueOf failed");
     },
   };
 
   // The logger should handle this gracefully and not throw
-  logger.info('Message: %s', problematicObject);
+  logger.info("Message: %s", problematicObject);
 
   const logs = getCapturedLogs();
   assertEquals(logs.length, 1);
@@ -276,15 +280,14 @@ Deno.test("Logger Additional Fallback Tests - Extreme Error Conditions - should 
   const output = JSON.parse(logs[0]);
   // The logger should handle the problematic object gracefully
   // Either by showing [object Object] or the actual object structure
-  assertEquals(typeof output.msg, 'string');
-  assertEquals(output.msg.startsWith('Message: '), true);
-
+  assertEquals(typeof output.msg, "string");
+  assertEquals(output.msg.startsWith("Message: "), true);
 });
 
 Deno.test("Logger Additional Fallback Tests - Extreme Error Conditions - should handle when hostname fails", () => {
   setupMocks();
   clearCapturedLogs();
-  const logger = new Logger({ format: 'json' });
+  const logger = new Logger({ format: "json" });
 
   // Mock hostname retrieval to throw (this would need to be mocked at the source)
   // Since we can't directly mock os.hostname in Deno, this test shows the concept
@@ -292,9 +295,8 @@ Deno.test("Logger Additional Fallback Tests - Extreme Error Conditions - should 
 
   // For Deno, we could mock the hostname call if it were extracted to a mockable function
   // For now, this is more of a documentation test
-  logger.info('test message');
+  logger.info("test message");
   assertEquals(getCapturedLogs().length, 1);
-
 });
 
 Deno.test("Logger Additional Fallback Tests - Fallback Chain Testing - should handle formatter failures gracefully", () => {
@@ -302,11 +304,11 @@ Deno.test("Logger Additional Fallback Tests - Fallback Chain Testing - should ha
   clearCapturedLogs();
   clearCapturedErrors();
 
-  const logger = new Logger({ format: 'simple', callerLevel: 'info' });
+  const logger = new Logger({ format: "simple", callerLevel: "info" });
 
   // Break the simple formatter
   logger.formatters.simple = function () {
-    throw new Error('Simple formatter broken');
+    throw new Error("Simple formatter broken");
   };
 
   // Also simulate caller detection failure
@@ -315,16 +317,16 @@ Deno.test("Logger Additional Fallback Tests - Fallback Chain Testing - should ha
     this.callerErrorCount++;
     if (this.callerErrorCount <= this.maxCallerErrors) {
       console.error(
-        'Error retrieving caller info:',
-        new Error('Caller detection failed')
+        "Error retrieving caller info:",
+        new Error("Caller detection failed"),
       );
     }
-    return { callerFile: 'unknown', callerLine: 0 };
+    return { callerFile: "unknown", callerLine: 0 };
   };
 
   try {
     // Should still produce some output despite multiple failures
-    logger.info('test message');
+    logger.info("test message");
 
     // Should produce some kind of output (fallback to JSON formatter)
     assertEquals(getCapturedLogs().length, 1);
@@ -332,13 +334,13 @@ Deno.test("Logger Additional Fallback Tests - Fallback Chain Testing - should ha
 
     // Should be valid JSON (fallback formatter)
     const parsed = JSON.parse(output);
-    assertEquals(parsed.msg, 'test message');
-    assert(parsed.formatterError.includes('Simple formatter broken'));
-    assertEquals(parsed.callerFile, 'unknown');
+    assertEquals(parsed.msg, "test message");
+    assert(parsed.formatterError.includes("Simple formatter broken"));
+    assertEquals(parsed.callerFile, "unknown");
   } finally {
     logger.getCallerInfo = originalGetCallerInfo;
     logger.callerErrorCount = 0;
-    }
+  }
 });
 
 Deno.test("Logger Additional Fallback Tests - Resource Cleanup - should not leak memory during repeated errors", () => {
@@ -346,11 +348,11 @@ Deno.test("Logger Additional Fallback Tests - Resource Cleanup - should not leak
   clearCapturedLogs();
   clearCapturedErrors();
 
-  const logger = new Logger({ format: 'simple' });
+  const logger = new Logger({ format: "simple" });
 
   // Break the formatter
   logger.formatters.simple = function () {
-    throw new Error('Always fails');
+    throw new Error("Always fails");
   };
 
   // Log many times to check for memory leaks
@@ -364,5 +366,4 @@ Deno.test("Logger Additional Fallback Tests - Resource Cleanup - should not leak
   // Check that we're not accumulating error state
   // (This is more of a smoke test - real memory leak detection would need different tools)
   assert(true); // If we get here without crashing, that's good
-
 });

@@ -1,29 +1,29 @@
 // Native implementation of util.format functionality
 function format(f: unknown, ...args: unknown[]): string {
-  if (typeof f !== 'string') {
+  if (typeof f !== "string") {
     // If first argument is not a string, just join all args with spaces
-    return [f, ...args].map(arg => {
-      if (arg === null) return 'null';
-      if (arg === undefined) return 'undefined';
-      if (typeof arg === 'object') {
+    return [f, ...args].map((arg) => {
+      if (arg === null) return "null";
+      if (arg === undefined) return "undefined";
+      if (typeof arg === "object") {
         try {
           return JSON.stringify(arg, null, 0);
         } catch {
           // Handle circular references and other JSON errors
-          return '[object Object]';
+          return "[object Object]";
         }
       }
       return String(arg);
-    }).join(' ');
+    }).join(" ");
   }
 
   let i = 0;
   // First, handle %% replacement - if there are no args, %% stays as %%
   // If there are args, %% becomes %
-  const handlePercentPercent = args.length === 0 ? '%%' : '%';
+  const handlePercentPercent = args.length === 0 ? "%%" : "%";
 
   const str = f.replace(/%[sdifj%]/g, (match: string) => {
-    if (match === '%%') {
+    if (match === "%%") {
       return handlePercentPercent;
     }
 
@@ -32,48 +32,50 @@ function format(f: unknown, ...args: unknown[]): string {
     const arg = args[i++];
 
     switch (match) {
-      case '%s':
-        if (arg === null) return 'null';
-        if (arg === undefined) return 'undefined';
-        if (typeof arg === 'object') {
+      case "%s":
+        if (arg === null) return "null";
+        if (arg === undefined) return "undefined";
+        if (typeof arg === "object") {
           try {
             // For objects without %j, use a simplified string representation
             if (Array.isArray(arg)) {
-              return `[ ${arg.join(', ')} ]`;
+              return `[ ${arg.join(", ")} ]`;
             }
             // For plain objects, show key-value pairs
-            const entries = Object.entries(arg).map(([k, v]) => `${k}: ${typeof v === 'string' ? `'${v}'` : v}`);
-            return `{ ${entries.join(', ')} }`;
+            const entries = Object.entries(arg).map(([k, v]) =>
+              `${k}: ${typeof v === "string" ? `'${v}'` : v}`
+            );
+            return `{ ${entries.join(", ")} }`;
           } catch {
-            return '[object Object]';
+            return "[object Object]";
           }
         }
         try {
           return String(arg);
         } catch {
-          return '[object Object]';
+          return "[object Object]";
         }
 
-      case '%d':
-        if (arg === null) return '0';
-        if (arg === undefined) return 'NaN';
+      case "%d":
+        if (arg === null) return "0";
+        if (arg === undefined) return "NaN";
         return String(Number(arg));
 
-      case '%i':
-        if (arg === null) return '0';
-        if (arg === undefined) return 'NaN';
+      case "%i":
+        if (arg === null) return "0";
+        if (arg === undefined) return "NaN";
         return String(parseInt(String(Number(arg)), 10));
 
-      case '%f':
-        if (arg === null) return '0';
-        if (arg === undefined) return 'NaN';
+      case "%f":
+        if (arg === null) return "0";
+        if (arg === undefined) return "NaN";
         return String(parseFloat(String(Number(arg))));
 
-      case '%j':
+      case "%j":
         try {
           return JSON.stringify(arg);
         } catch {
-          return '[Circular]';
+          return "[Circular]";
         }
 
       default:
@@ -84,28 +86,30 @@ function format(f: unknown, ...args: unknown[]): string {
   // Append any remaining arguments
   const remainingArgs = args.slice(i);
   if (remainingArgs.length > 0) {
-    return str + ' ' + remainingArgs.map(arg => {
-      if (arg === null) return 'null';
-      if (arg === undefined) return 'undefined';
-      if (typeof arg === 'object') {
+    return str + " " + remainingArgs.map((arg) => {
+      if (arg === null) return "null";
+      if (arg === undefined) return "undefined";
+      if (typeof arg === "object") {
         try {
           if (Array.isArray(arg)) {
-            return `[ ${arg.join(', ')} ]`;
+            return `[ ${arg.join(", ")} ]`;
           }
-          const entries = Object.entries(arg).map(([k, v]) => `${k}: ${typeof v === 'string' ? `'${v}'` : v}`);
-          return `{ ${entries.join(', ')} }`;
+          const entries = Object.entries(arg).map(([k, v]) =>
+            `${k}: ${typeof v === "string" ? `'${v}'` : v}`
+          );
+          return `{ ${entries.join(", ")} }`;
         } catch {
-          return '[object Object]';
+          return "[object Object]";
         }
       }
       return String(arg);
-    }).join(' ');
+    }).join(" ");
   }
 
   return str;
 }
 
-export type LogLevel = 'silent' | 'error' | 'warn' | 'info' | 'debug';
+export type LogLevel = "silent" | "error" | "warn" | "info" | "debug";
 
 export interface LogLevels {
   [level: string]: number;
@@ -142,8 +146,8 @@ export type Formatter = (logEntry: LogEntry) => string;
 export interface LoggerOptions {
   level?: LogLevel;
   levels?: Partial<LogLevels>;
-  format?: 'json' | 'simple';
-  time?: 'long' | 'short';
+  format?: "json" | "simple";
+  time?: "long" | "short";
   callerLevel?: LogLevel;
   colours?: Partial<Colours>;
 }
@@ -152,8 +156,8 @@ class Logger {
   options: {
     level: LogLevel;
     levels: LogLevels;
-    format: 'json' | 'simple';
-    time: 'long' | 'short';
+    format: "json" | "simple";
+    time: "long" | "short";
     callerLevel: LogLevel;
     colours: Colours;
   };
@@ -174,19 +178,19 @@ class Logger {
     };
 
     const defaultColours: Colours = {
-      error: '\x1b[91m',
-      warn: '\x1b[33m',
-      info: '\x1b[94m',
-      debug: '\x1b[37m',
-      reset: '\x1b[0m',
+      error: "\x1b[91m",
+      warn: "\x1b[33m",
+      info: "\x1b[94m",
+      debug: "\x1b[37m",
+      reset: "\x1b[0m",
     };
 
     this.options = {
-      level: options.level || 'info',
+      level: options.level || "info",
       levels: Object.assign({}, defaultLevels, options.levels),
-      format: options.format || 'json',
-      time: options.time || 'short',
-      callerLevel: options.callerLevel || 'warn',
+      format: options.format || "json",
+      time: options.time || "short",
+      callerLevel: options.callerLevel || "warn",
       colours: Object.assign({}, defaultColours, options.colours),
     };
 
@@ -207,71 +211,83 @@ class Logger {
   validateOptions(options: LoggerOptions): void {
     // Validate level if provided
     if (options.level !== undefined) {
-      const validLevels: LogLevel[] = ['silent', 'error', 'warn', 'info', 'debug'];
+      const validLevels: LogLevel[] = [
+        "silent",
+        "error",
+        "warn",
+        "info",
+        "debug",
+      ];
       if (!validLevels.includes(options.level)) {
         throw new Error(
-          `Invalid log level: ${
-            options.level
-          }. Valid levels are: ${validLevels.join(', ')}`
+          `Invalid log level: ${options.level}. Valid levels are: ${
+            validLevels.join(", ")
+          }`,
         );
       }
     }
 
     // Validate format if provided
     if (options.format !== undefined) {
-      const validFormats = ['json', 'simple'];
+      const validFormats = ["json", "simple"];
       if (!validFormats.includes(options.format)) {
         throw new Error(
-          `Invalid format: ${
-            options.format
-          }. Valid formats are: ${validFormats.join(', ')}`
+          `Invalid format: ${options.format}. Valid formats are: ${
+            validFormats.join(", ")
+          }`,
         );
       }
     }
 
     // Validate time if provided
     if (options.time !== undefined) {
-      const validTimes = ['long', 'short'];
+      const validTimes = ["long", "short"];
       if (!validTimes.includes(options.time)) {
         throw new Error(
-          `Invalid time: ${
-            options.time
-          }. Valid times are: ${validTimes.join(', ')}`
+          `Invalid time: ${options.time}. Valid times are: ${
+            validTimes.join(", ")
+          }`,
         );
       }
     }
 
     // Validate callerLevel if provided
     if (options.callerLevel !== undefined) {
-      const validLevels: LogLevel[] = ['silent', 'error', 'warn', 'info', 'debug'];
+      const validLevels: LogLevel[] = [
+        "silent",
+        "error",
+        "warn",
+        "info",
+        "debug",
+      ];
       if (!validLevels.includes(options.callerLevel)) {
         throw new Error(
-          `Invalid callerLevel: ${
-            options.callerLevel
-          }. Valid levels are: ${validLevels.join(', ')}`
+          `Invalid callerLevel: ${options.callerLevel}. Valid levels are: ${
+            validLevels.join(", ")
+          }`,
         );
       }
     }
 
     // Validate colours if provided (should be an object)
-    if (options.colours !== undefined && typeof options.colours !== 'object') {
-      throw new Error('colours option must be an object');
+    if (options.colours !== undefined && typeof options.colours !== "object") {
+      throw new Error("colours option must be an object");
     }
 
     // Validate levels if provided (should be an object with numeric values)
     if (options.levels !== undefined) {
-      if (typeof options.levels !== 'object') {
-        throw new Error('levels option must be an object');
+      if (typeof options.levels !== "object") {
+        throw new Error("levels option must be an object");
       }
 
       for (const [level, value] of Object.entries(options.levels)) {
         if (
-          typeof value !== 'number' ||
+          typeof value !== "number" ||
           value < 0 ||
           !Number.isInteger(value)
         ) {
           throw new Error(
-            `Level value for '${level}' must be a non-negative integer`
+            `Level value for '${level}' must be a non-negative integer`,
           );
         }
       }
@@ -295,15 +311,19 @@ class Logger {
           msg: String(logEntry.msg), // Convert to string safely
           callerFile: logEntry.callerFile,
           callerLine: logEntry.callerLine,
-          jsonError: `JSON stringify failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          jsonError: `JSON stringify failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
         };
         return JSON.stringify(safeEntry);
       } catch {
         // Last resort - return a plain string
-        return `{"level":"${logEntry.level}","msg":"${String(
-          logEntry.msg
-          // eslint-disable-next-line no-useless-escape
-        ).replace(/"/g, '\"')}","jsonError":"Multiple JSON errors occurred"}`;
+        return `{"level":"${logEntry.level}","msg":"${
+          String(
+            logEntry.msg,
+            // eslint-disable-next-line no-useless-escape
+          ).replace(/"/g, '"')
+        }","jsonError":"Multiple JSON errors occurred"}`;
       }
     }
   }
@@ -312,7 +332,7 @@ class Logger {
   simpleFormatter(logEntry: LogEntry): string {
     const levelPadded = logEntry.level.toUpperCase().padEnd(5);
     const caller = logEntry.callerFile
-      ? `${logEntry.callerFile.split('/').pop()}:${logEntry.callerLine}`
+      ? `${logEntry.callerFile.split("/").pop()}:${logEntry.callerLine}`
       : null;
 
     return caller
@@ -321,17 +341,22 @@ class Logger {
   }
 
   getCallerInfo(): { callerFile: string; callerLine: number } {
-    const originalFunc = (Error as unknown as { prepareStackTrace?: unknown }).prepareStackTrace;
-    let callerFile = 'unknown';
+    const originalFunc =
+      (Error as unknown as { prepareStackTrace?: unknown }).prepareStackTrace;
+    let callerFile = "unknown";
     let callerLine = 0;
     try {
       const err = new Error();
       // deno-lint-ignore prefer-const
       let currentFile: string | undefined;
-      (Error as unknown as { prepareStackTrace?: unknown }).prepareStackTrace = function (_err: unknown, stack: unknown) {
-        return stack;
+      (Error as unknown as { prepareStackTrace?: unknown }).prepareStackTrace =
+        function (_err: unknown, stack: unknown) {
+          return stack;
+        };
+      const stack = err.stack as unknown as {
+        shift: () => { getFileName: () => string; getLineNumber: () => number };
+        length: number;
       };
-      const stack = err.stack as unknown as { shift: () => { getFileName: () => string; getLineNumber: () => number }; length: number };
       currentFile = stack.shift().getFileName();
       while (stack.length) {
         const stackFrame = stack.shift();
@@ -345,17 +370,18 @@ class Logger {
     } catch (e) {
       this.callerErrorCount++;
       if (this.callerErrorCount <= this.maxCallerErrors) {
-        console.error('Error retrieving caller info:', e);
+        console.error("Error retrieving caller info:", e);
         if (this.callerErrorCount === this.maxCallerErrors) {
           // loop detected
           console.error(
-            `Caller detection failed ${this.maxCallerErrors} times. Suppressing further caller error messages.`
+            `Caller detection failed ${this.maxCallerErrors} times. Suppressing further caller error messages.`,
           );
         }
       }
       // callerFile and callerLine already set to defaults above
     } finally {
-      (Error as unknown as { prepareStackTrace?: unknown }).prepareStackTrace = originalFunc;
+      (Error as unknown as { prepareStackTrace?: unknown }).prepareStackTrace =
+        originalFunc;
     }
     return { callerFile, callerLine };
   }
@@ -366,18 +392,16 @@ class Logger {
     }
 
     // Only get caller info if current level is at or above callerLevel threshold
-    const shouldIncludeCaller =
-      this.options.levels[level] <=
+    const shouldIncludeCaller = this.options.levels[level] <=
       this.options.levels[this.options.callerLevel];
     const { callerFile, callerLine } = shouldIncludeCaller
       ? this.getCallerInfo()
       : { callerFile: undefined, callerLine: undefined };
 
     const now = new Date();
-    const time =
-      this.options.time === 'long'
-        ? now.toISOString()
-        : now.toISOString().slice(0, 16).replace('T', ' ');
+    const time = this.options.time === "long"
+      ? now.toISOString()
+      : now.toISOString().slice(0, 16).replace("T", " ");
 
     const logEntry: LogEntry = {
       level,
@@ -389,7 +413,10 @@ class Logger {
     };
 
     // Only include caller info if it was requested
-    if (shouldIncludeCaller && callerFile !== undefined && callerLine !== undefined) {
+    if (
+      shouldIncludeCaller && callerFile !== undefined &&
+      callerLine !== undefined
+    ) {
       logEntry.callerFile = callerFile;
       logEntry.callerLine = callerLine;
     }
@@ -398,17 +425,17 @@ class Logger {
     const resetColour = this.options.colours.reset;
 
     // Select the appropriate formatter
-    const formatter =
-      this.formatters[this.options.format] || this.formatters.json;
+    const formatter = this.formatters[this.options.format] ||
+      this.formatters.json;
 
     let formattedLog: string;
     try {
       formattedLog = formatter(logEntry);
 
       // Ensure formatter returned a string
-      if (typeof formattedLog !== 'string') {
+      if (typeof formattedLog !== "string") {
         throw new Error(
-          `Formatter returned ${typeof formattedLog} instead of string`
+          `Formatter returned ${typeof formattedLog} instead of string`,
         );
       }
     } catch (error) {
@@ -416,18 +443,24 @@ class Logger {
       try {
         const safeEntry = {
           ...logEntry,
-          formatterError: `Formatter failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          formatterError: `Formatter failed: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
         };
         formattedLog = this.formatters.json(safeEntry);
       } catch {
         // Even JSON formatter failed, create minimal safe output
-        formattedLog = `{"level":"${logEntry.level}","msg":"${String(
-          logEntry.msg
-        ).replace(
-          /"/g,
-          // eslint-disable-next-line no-useless-escape
-          '\"'
-        )}","formatterError":"Formatter failed: ${error instanceof Error ? error.message : 'Unknown error'}"}`;
+        formattedLog = `{"level":"${logEntry.level}","msg":"${
+          String(
+            logEntry.msg,
+          ).replace(
+            /"/g,
+            // eslint-disable-next-line no-useless-escape
+            '"',
+          )
+        }","formatterError":"Formatter failed: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }"}`;
       }
     }
 
@@ -440,19 +473,19 @@ class Logger {
   }
 
   error(message: unknown, ...args: unknown[]): void {
-    this.log('error', message, ...args);
+    this.log("error", message, ...args);
   }
 
   warn(message: unknown, ...args: unknown[]): void {
-    this.log('warn', message, ...args);
+    this.log("warn", message, ...args);
   }
 
   info(message: unknown, ...args: unknown[]): void {
-    this.log('info', message, ...args);
+    this.log("info", message, ...args);
   }
 
   debug(message: unknown, ...args: unknown[]): void {
-    this.log('debug', message, ...args);
+    this.log("debug", message, ...args);
   }
 
   level(): LogLevel;
