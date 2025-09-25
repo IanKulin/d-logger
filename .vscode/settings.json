@@ -1,3 +1,7 @@
 {
-  "cSpell.words": ["colour", "colours", "iankulin", "sdifj", "stringifying"]
+  "cSpell.words": ["colour", "colours", "iankulin", "sdifj", "stringifying"],
+  "deno.enable": true,
+  "deno.lint": true,
+  "deno.unstable": [],
+  "typescript.preferences.includePackageJsonAutoImports": "off"
 }

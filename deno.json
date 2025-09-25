@@ -8,5 +8,9 @@
     "test": "deno test --allow-env --allow-sys",
     "lint": "deno lint",
     "check": "deno check lib/logger.ts"
+  },
+  "compilerOptions": {
+    "lib": ["deno.ns", "deno.window"],
+    "strict": true
   }
 }
