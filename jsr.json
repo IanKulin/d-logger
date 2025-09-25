@@ -1,0 +1,15 @@
+{
+  "name": "@iankulin/logger",
+  "version": "1.0.0",
+  "exports": {
+    ".": "./lib/logger.ts"
+  },
+  "publish": {
+    "include": [
+      "lib/",
+      "README.md",
+      "LICENSE",
+      "jsr.json"
+    ]
+  }
+}

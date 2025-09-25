@@ -1,4 +1,4 @@
-# logger [![NPM version](https://img.shields.io/npm/v/@iankulin/logger.svg?style=flat)](https://www.npmjs.com/package/@iankulin/logger) [![NPM total downloads](https://img.shields.io/npm/dt/@iankulin/logger.svg?style=flat)](https://npmjs.org/package/@iankulin/logger)
+# logger [![JSR](https://jsr.io/badges/@iankulin/logger)](https://jsr.io/@iankulin/logger) [![JSR Score](https://jsr.io/badges/@iankulin/logger/score)](https://jsr.io/@iankulin/logger/score)
 
 > Flexible console logging utility with colors, and multiple output formats
 
@@ -8,20 +8,23 @@
 - **Flexible output formats**: JSON or simple text
 - **Caller detection**: Automatically identifies source file and line number based on log level
 - **Color support**: Automatic TTY detection with colored output
-- **ESM only**: Modern ES module support
 
 ## Install
 
-Install with [npm](https://npmjs.org/package/@iankulin/logger):
+Install with [JSR](https://jsr.io/@iankulin/logger) for Deno:
 
 ```sh
-$ npm install @iankulin/logger
+# Add to your deno.json
+$ deno add @iankulin/logger
+
+# Or import directly
+$ deno run --allow-env --allow-sys your-script.js
 ```
 
 ## Quick Start
 
-```js
-import Logger from '@iankulin/logger';
+```typescript
+import Logger from "@iankulin/logger";
 
 const logger = new Logger();
 logger.info('Hello from logger');
@@ -32,8 +35,8 @@ logger.error('Something went wrong');
 
 ### Basic Logging
 
-```js
-import Logger from '@iankulin/logger';
+```typescript
+import Logger from "@iankulin/logger";
 const logger = new Logger({ level: 'info' });
 
 logger.error('Critical error occurred');
@@ -52,7 +55,7 @@ The logger supports five log levels (from least to most verbose):
 - `info` - Error, warning, and info messages (default)
 - `debug` - All messages
 
-```js
+```typescript
 const logger = new Logger({ level: 'debug' });
 
 // All of these will be logged
@@ -73,7 +76,7 @@ console.log(logger.level()); // 'error'
 
 #### JSON Format (Default)
 
-```js
+```typescript
 const logger = new Logger({ format: 'json' });
 logger.info('Hello world');
 ```
@@ -93,7 +96,7 @@ logger.info('Hello world');
 
 #### Simple Format
 
-```js
+```typescript
 const logger = new Logger({ format: 'simple' });
 logger.error('Something failed');
 ```
@@ -104,9 +107,9 @@ logger.error('Something failed');
 
 ### Message Formatting
 
-The logger uses Node.js `util.format()` for message formatting with placeholders like `%s`, `%d`, `%j`.
+The logger supports `util.format()` style message formatting with placeholders like `%s`, `%d`, `%j`.
 
-```js
+```typescript
 const logger = new Logger({ format: 'json' });
 
 // String formatting
@@ -125,7 +128,7 @@ simpleLogger.warn('Processing file %s (%d bytes)', 'data.txt', 1024);
 
 ### Custom Colors
 
-```js
+```typescript
 const logger = new Logger({
   colours: {
     error: '\x1b[31m', // Red
@@ -140,7 +143,7 @@ const logger = new Logger({
 
 Control when caller information (file and line number) is included in log messages. This is useful for performance optimization since caller detection can be expensive.
 
-```js
+```typescript
 // Default: only include caller info for warnings and errors
 const logger = new Logger({ callerLevel: 'warn' });
 
@@ -186,12 +189,12 @@ logger.debug('Debug message'); // No caller info
 
 ## Common Usage Patterns
 
-```js
-import Logger from '@iankulin/logger';
+```typescript
+import Logger from "@iankulin/logger";
 
 // Production: JSON format with environment-based level
 const prodLogger = new Logger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: Deno.env.get('LOG_LEVEL') || 'info',
   format: 'json',
   callerLevel: 'error', // Performance optimization
 });
@@ -208,8 +211,7 @@ const testLogger = new Logger({ level: 'silent' });
 
 ## Requirements
 
-- Node.js 18.0.0 or higher
-- ES modules support
+- Deno 1.37.0 or higher
 
 ## License
 
@@ -217,9 +219,11 @@ const testLogger = new Logger({ level: 'silent' });
 
 ## Versions
 
-- **0.1.5** - Initial release
-- **0.1.6** - Added tests, improved error handling, caller detection loop prevention, `silent` logging level
-- **1.0.0** - Production release
-- **1.0.2** - Added types for intellisense
-- **1.1.0** - added { time: 'short' } option, refactor tests, added { callerLevel: 'warn' } option
-- **1.1.2** - dependencies update following [chalk supply chain attack](https://www.bleepingcomputer.com/news/security/self-propagating-supply-chain-attack-hits-187-npm-packages/) although not affected.
+- **1.0.0** - JSR release with full Deno support
+  - Migrated from [npm version](https://www.npmjs.com/package/@iankulin/logger) to JSR (JavaScript Registry)
+  - Full TypeScript support
+  - Native Deno compatibility
+
+## AI Disclosure
+
+- AI Code tools were used in this project
