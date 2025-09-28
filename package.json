@@ -1,0 +1,47 @@
+{
+  "name": "@iankulin/logger",
+  "version": "1.1.0",
+  "description": "A comprehensive cross-platform logging library with configurable levels, formatting, and caller detection. Compatible with Deno, Node.js, and Bun.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./lib/logger.ts",
+  "exports": {
+    ".": {
+      "import": "./lib/logger.ts",
+      "require": "./lib/logger.ts"
+    }
+  },
+  "files": [
+    "lib/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "node demo.js",
+    "test": "node --test test/",
+    "lint": "echo 'Linting with deno lint'",
+    "check": "tsc --noEmit lib/logger.ts"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "logger",
+    "logging",
+    "cross-platform",
+    "deno",
+    "nodejs",
+    "bun",
+    "typescript",
+    "structured-logging",
+    "json-logging"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iankulin/d-logger.git"
+  },
+  "bugs": {
+    "url": "https://github.com/iankulin/d-logger/issues"
+  },
+  "homepage": "https://github.com/iankulin/d-logger#readme"
+}

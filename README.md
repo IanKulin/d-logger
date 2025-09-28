@@ -25,6 +25,7 @@ $ deno run --allow-env --allow-sys your-script.js
 ## Quick Start
 
 ```typescript
+// Deno 
 import Logger from "@iankulin/logger";
 
 const logger = new Logger();
@@ -36,6 +37,7 @@ logger.error("Something went wrong");
 
 
 ```typescript
+// Deno
 import Logger from "jsr:@iankulin/logger";
 
 // Create a new logger instance
@@ -157,6 +159,7 @@ devLogger.info("Development info message");
 - **1.0.1** - Minor updates
   - Deno flavoured demo in readme
   - Add JSDoc to boost JSR score
+- **1.1.0** - Add Node and Bun support
 
 ## AI Disclosure
 

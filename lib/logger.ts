@@ -1,9 +1,11 @@
 /**
- * @fileoverview A comprehensive Deno-based logging library with configurable levels, formatting, and caller detection.
+ * @fileoverview A comprehensive cross-platform logging library with configurable levels, formatting, and caller detection.
  *
  * This module provides a Logger class that supports multiple log levels, JSON and simple text formatting,
  * automatic TTY detection for colored output, and optional caller information inclusion. It includes
  * built-in util.format-style string formatting with %s, %d, %j, and other specifiers.
+ *
+ * Compatible with Deno, Node.js, and Bun runtimes.
  *
  * @module logger
  * @example
@@ -135,6 +137,67 @@ function format(f: unknown, ...args: unknown[]): string {
   return str;
 }
 
+// Cross-platform process interface
+interface NodeProcess {
+  pid: number;
+  versions?: {
+    node?: string;
+    bun?: string;
+  };
+  stdout?: {
+    isTTY?: boolean;
+  };
+}
+
+// Cross-platform global interface
+interface CrossPlatformGlobal {
+  process?: NodeProcess;
+  require?: (module: string) => unknown;
+}
+
+// Runtime detection and cross-platform utilities
+const runtime = {
+  isDeno: typeof Deno !== 'undefined',
+  isNode: typeof (globalThis as CrossPlatformGlobal).process !== 'undefined' &&
+          Boolean((globalThis as CrossPlatformGlobal).process?.versions?.node),
+  isBun: typeof (globalThis as CrossPlatformGlobal).process !== 'undefined' &&
+         Boolean((globalThis as CrossPlatformGlobal).process?.versions?.bun),
+};
+
+// Cross-platform API wrappers
+function getPid(): number {
+  if (runtime.isDeno) {
+    return Deno.pid;
+  }
+  return (globalThis as CrossPlatformGlobal).process?.pid || 0;
+}
+
+function getHostname(): string {
+  if (runtime.isDeno) {
+    return Deno.hostname();
+  }
+  // For Node.js/Bun, we need to import os module
+  if (runtime.isNode || runtime.isBun) {
+    try {
+      // Try accessing require if available
+      const requireFn = (globalThis as CrossPlatformGlobal)?.require || eval('require');
+      const os = requireFn?.('os') as { hostname?: () => string };
+      return os?.hostname?.() || 'localhost';
+    } catch {
+      // Fallback if require is not available
+      return 'localhost';
+    }
+  }
+  return 'localhost';
+}
+
+function isTerminal(): boolean {
+  if (runtime.isDeno) {
+    return Deno.stdout.isTerminal();
+  }
+  return (globalThis as CrossPlatformGlobal).process?.stdout?.isTTY || false;
+}
+
 /**
  * Available log levels in order of priority.
  *
@@ -200,7 +263,7 @@ export interface LogEntry {
   levelNumber: number;
   /** Formatted timestamp string */
   time: string;
-  /** Process ID of the current Deno process */
+  /** Process ID of the current process */
   pid: number;
   /** Hostname of the current machine */
   hostname: string;
@@ -371,7 +434,7 @@ class Logger {
     };
 
     // Detect if output is redirected to a file
-    this.isRedirected = !Deno.stdout.isTerminal();
+    this.isRedirected = !isTerminal();
 
     // Initialize formatters registry
     this.formatters = {
@@ -583,8 +646,8 @@ class Logger {
       level,
       levelNumber: this.options.levels[level],
       time: time,
-      pid: Deno.pid,
-      hostname: Deno.hostname(),
+      pid: getPid(),
+      hostname: getHostname(),
       msg: format(message, ...args),
     };
 
