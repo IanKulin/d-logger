@@ -1,3 +1,29 @@
+/**
+ * @fileoverview A comprehensive Deno-based logging library with configurable levels, formatting, and caller detection.
+ *
+ * This module provides a Logger class that supports multiple log levels, JSON and simple text formatting,
+ * automatic TTY detection for colored output, and optional caller information inclusion. It includes
+ * built-in util.format-style string formatting with %s, %d, %j, and other specifiers.
+ *
+ * @module logger
+ * @example
+ * ```ts
+ * import Logger from "@iankulin/logger";
+ *
+ * // Create a basic logger
+ * const logger = new Logger({ level: "info", format: "json" });
+ *
+ * // Log messages with different levels
+ * logger.info("User %s logged in", "alice");
+ * logger.warn("High memory usage: %d%%", 89);
+ * logger.error("Database connection failed: %j", { host: "localhost", port: 5432 });
+ *
+ * // Change log level dynamically
+ * logger.level("debug");
+ * logger.debug("This will now be shown");
+ * ```
+ */
+
 // Native implementation of util.format functionality
 function format(f: unknown, ...args: unknown[]): string {
   if (typeof f !== "string") {
@@ -109,8 +135,21 @@ function format(f: unknown, ...args: unknown[]): string {
   return str;
 }
 
+/**
+ * Available log levels in order of priority.
+ *
+ * - `silent`: No logging output
+ * - `error`: Only error messages
+ * - `warn`: Error and warning messages
+ * - `info`: Error, warning, and info messages (default)
+ * - `debug`: All messages including debug output
+ */
 export type LogLevel = "silent" | "error" | "warn" | "info" | "debug";
 
+/**
+ * Numeric mapping for log levels used internally for level comparison.
+ * Lower numbers have higher priority (are shown more often).
+ */
 export interface LogLevels {
   [level: string]: number;
   silent: -1;
@@ -120,6 +159,10 @@ export interface LogLevels {
   debug: 3;
 }
 
+/**
+ * ANSI color codes for different log levels.
+ * Only used when output is to a terminal (TTY), not when redirected to files.
+ */
 export interface Colours {
   [level: string]: string;
   error: string;
@@ -129,29 +172,137 @@ export interface Colours {
   reset: string;
 }
 
+/**
+ * Structure of a log entry passed to formatters.
+ *
+ * This interface defines the shape of log objects that are passed to custom formatters.
+ * All standard properties are always present, with optional caller information included
+ * based on the {@link LoggerOptions.callerLevel} setting.
+ *
+ * @example
+ * ```ts
+ * const entry: LogEntry = {
+ *   level: "info",
+ *   levelNumber: 2,
+ *   time: "2024-01-15 10:30",
+ *   pid: 1234,
+ *   hostname: "localhost",
+ *   msg: "User alice logged in",
+ *   callerFile: "/path/to/app.ts",
+ *   callerLine: 42
+ * };
+ * ```
+ */
 export interface LogEntry {
+  /** The log level as a string (e.g., "info", "error") */
   level: string;
+  /** The numeric value of the log level for comparison */
   levelNumber: number;
+  /** Formatted timestamp string */
   time: string;
+  /** Process ID of the current Deno process */
   pid: number;
+  /** Hostname of the current machine */
   hostname: string;
+  /** The final formatted log message */
   msg: string;
+  /** Source file path (included based on callerLevel setting) */
   callerFile?: string;
+  /** Line number in source file (included based on callerLevel setting) */
   callerLine?: number;
+  /** Additional custom properties can be added by formatters */
   [key: string]: unknown;
 }
 
+/**
+ * Custom formatter function type for log entries.
+ *
+ * @param logEntry - The log entry object to format
+ * @returns A formatted string representation of the log entry
+ *
+ * @example
+ * ```ts
+ * const customFormatter: Formatter = (entry) => {
+ *   return `${entry.time} [${entry.level.toUpperCase()}] ${entry.msg}`;
+ * };
+ * ```
+ */
 export type Formatter = (logEntry: LogEntry) => string;
 
+/**
+ * Configuration options for the Logger constructor.
+ *
+ * @example
+ * ```ts
+ * // Basic configuration
+ * const logger = new Logger({
+ *   level: "debug",
+ *   format: "simple"
+ * });
+ *
+ * // Advanced configuration with caller detection
+ * const logger = new Logger({
+ *   level: "info",
+ *   format: "json",
+ *   time: "long",
+ *   callerLevel: "warn",
+ *   colours: {
+ *     error: "\x1b[91m",
+ *     info: "\x1b[94m"
+ *   }
+ * });
+ * ```
+ */
 export interface LoggerOptions {
+  /** Minimum log level to output. Defaults to "info" */
   level?: LogLevel;
+  /** Custom level mappings. Partial override of default levels */
   levels?: Partial<LogLevels>;
+  /** Output format: "json" for structured logs, "simple" for human-readable. Defaults to "json" */
   format?: "json" | "simple";
+  /** Timestamp format: "long" for ISO string, "short" for abbreviated. Defaults to "short" */
   time?: "long" | "short";
+  /** Minimum level to include caller info (file/line). Defaults to "warn" */
   callerLevel?: LogLevel;
+  /** Custom ANSI color codes for log levels */
   colours?: Partial<Colours>;
 }
 
+/**
+ * A comprehensive logging class with configurable levels, formatting, and caller detection.
+ *
+ * Features:
+ * - Multiple log levels (silent, error, warn, info, debug)
+ * - JSON and simple text formatting
+ * - util.format-style string interpolation (%s, %d, %j, etc.)
+ * - Automatic TTY detection for colored vs plain output
+ * - Optional caller information (file/line) inclusion
+ * - Dynamic level changing
+ * - Extensible color and level configuration
+ *
+ * @example
+ * ```ts
+ * // Basic usage
+ * const logger = new Logger();
+ * logger.info("Hello, world!");
+ * logger.error("Something went wrong");
+ *
+ * // With format strings
+ * logger.info("User %s has %d notifications", "alice", 5);
+ * logger.warn("Config: %j", { timeout: 5000 });
+ *
+ * // Dynamic level changes
+ * logger.level("debug");
+ * logger.debug("Debug info now visible");
+ *
+ * // Custom configuration
+ * const customLogger = new Logger({
+ *   level: "warn",
+ *   format: "simple",
+ *   callerLevel: "error"
+ * });
+ * ```
+ */
 class Logger {
   options: {
     level: LogLevel;
@@ -166,6 +317,31 @@ class Logger {
   callerErrorCount: number;
   maxCallerErrors: number;
 
+  /**
+   * Creates a new Logger instance with the specified configuration.
+   *
+   * @param options - Configuration options for the logger
+   *
+   * @example
+   * ```ts
+   * // Default logger (info level, JSON format)
+   * const logger = new Logger();
+   *
+   * // Debug logger with simple formatting
+   * const debugLogger = new Logger({
+   *   level: "debug",
+   *   format: "simple"
+   * });
+   *
+   * // Production logger with caller info on errors only
+   * const prodLogger = new Logger({
+   *   level: "warn",
+   *   format: "json",
+   *   time: "long",
+   *   callerLevel: "error"
+   * });
+   * ```
+   */
   constructor(options: LoggerOptions = {}) {
     this.validateOptions(options);
 
@@ -472,22 +648,93 @@ class Logger {
     }
   }
 
+  /**
+   * Logs an error message. Always shown unless level is set to "silent".
+   *
+   * @param message - The message to log (supports format strings)
+   * @param args - Additional arguments for format string interpolation
+   *
+   * @example
+   * ```ts
+   * logger.error("Database connection failed");
+   * logger.error("User %s authentication failed", "john");
+   * logger.error("Error details: %j", { code: 500, message: "Internal error" });
+   * ```
+   */
   error(message: unknown, ...args: unknown[]): void {
     this.log("error", message, ...args);
   }
 
+  /**
+   * Logs a warning message. Shown when level is "warn", "info", or "debug".
+   *
+   * @param message - The message to log (supports format strings)
+   * @param args - Additional arguments for format string interpolation
+   *
+   * @example
+   * ```ts
+   * logger.warn("High memory usage detected");
+   * logger.warn("Cache miss for key: %s", "user:123");
+   * logger.warn("Performance warning: %d ms", 2500);
+   * ```
+   */
   warn(message: unknown, ...args: unknown[]): void {
     this.log("warn", message, ...args);
   }
 
+  /**
+   * Logs an informational message. Shown when level is "info" or "debug" (default behavior).
+   *
+   * @param message - The message to log (supports format strings)
+   * @param args - Additional arguments for format string interpolation
+   *
+   * @example
+   * ```ts
+   * logger.info("Application started successfully");
+   * logger.info("User %s logged in", "alice");
+   * logger.info("Request processed in %d ms", 150);
+   * ```
+   */
   info(message: unknown, ...args: unknown[]): void {
     this.log("info", message, ...args);
   }
 
+  /**
+   * Logs a debug message. Only shown when level is set to "debug".
+   *
+   * @param message - The message to log (supports format strings)
+   * @param args - Additional arguments for format string interpolation
+   *
+   * @example
+   * ```ts
+   * logger.debug("Processing user data");
+   * logger.debug("Cache hit for key: %s", "user:123");
+   * logger.debug("Function arguments: %j", { id: 123, name: "test" });
+   * ```
+   */
   debug(message: unknown, ...args: unknown[]): void {
     this.log("debug", message, ...args);
   }
 
+  /**
+   * Gets the current log level or sets a new one.
+   *
+   * @param newLevel - Optional new log level to set
+   * @returns The current (or newly set) log level
+   *
+   * @example
+   * ```ts
+   * // Get current level
+   * const currentLevel = logger.level(); // "info"
+   *
+   * // Set new level
+   * logger.level("debug");
+   * logger.debug("This will now be shown");
+   *
+   * // Chaining usage
+   * const level = logger.level("warn"); // Sets to "warn" and returns "warn"
+   * ```
+   */
   level(): LogLevel;
   level(newLevel: LogLevel): LogLevel;
   level(newLevel?: LogLevel): LogLevel {
@@ -502,6 +749,21 @@ class Logger {
     return this.options.level;
   }
 
+  /**
+   * Alternative method to set/get the log level. Identical to {@link level}.
+   *
+   * @param newLevel - Optional new log level to set
+   * @returns The current (or newly set) log level
+   *
+   * @example
+   * ```ts
+   * // Get current level
+   * const currentLevel = logger.setLevel(); // "info"
+   *
+   * // Set new level
+   * logger.setLevel("error");
+   * ```
+   */
   setLevel(): LogLevel;
   setLevel(newLevel: LogLevel): LogLevel;
   setLevel(newLevel?: LogLevel): LogLevel {
