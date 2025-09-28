@@ -18,7 +18,7 @@ Install with [JSR](https://jsr.io/@iankulin/logger) for Deno:
 # Add to your deno.json
 $ deno add @iankulin/logger
 
-# Or import directly
+# Or import directly (per the demo code below)
 $ deno run --allow-env --allow-sys your-script.js
 ```
 
