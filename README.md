@@ -34,185 +34,109 @@ logger.error("Something went wrong");
 
 ## Usage Examples
 
-### Basic Logging
 
 ```typescript
-import Logger from "@iankulin/logger";
-const logger = new Logger({ level: "info" });
+import Logger from "jsr:@iankulin/logger";
 
-logger.error("Critical error occurred");
-logger.warn("This is a warning");
-logger.info("Informational message");
-logger.debug("Debug info"); // Won't be shown (level is 'info')
-```
+// Create a new logger instance
+const logger = new Logger();
 
-### Log Levels
+// Demo basic logging levels
+console.log("=== Basic Logging with Defaults ===");
+logger.info("This is an info message");
 
-The logger supports five log levels (from least to most verbose):
+// Demo with structured data
+console.log("\n=== Structured Logging ===");
+logger.error("Database connection failed", {
+  error: "Connection timeout",
+  database: "users_db",
+  retryCount: 3
+});
 
-- `silent` - Suppresses all output
-- `error` - Only error messages
-- `warn` - Error and warning messages
-- `info` - Error, warning, and info messages (default)
-- `debug` - All messages
+// Demo message formatting with placeholders
+console.log("\n=== Printf Message Formatting ===");
+logger.info("User %s has %d points", "alice", 150);
 
-```typescript
-const logger = new Logger({ level: "debug" });
+// Demo with different log levels and formatting
+console.log("\n=== Log Level ===");
+logger.info("Current log level:", logger.level());
+logger.setLevel("debug");
+logger.debug("Debug is now enabled");
+logger.info("Current log level:", logger.level());
 
-// All of these will be logged
-logger.error("Error message");
-logger.warn("Warning message");
-logger.info("Info message");
-logger.debug("Debug message");
+// Demo silent level
+console.log("\n=== Silent Level ===");
+const silentLogger = new Logger({ level: "silent" });
+silentLogger.error("This error won't be shown");
+silentLogger.info("Neither will this info");
+console.log("Silent logger produced no output above");
 
-// Change level dynamically
-logger.level("error");
-logger.info("This will not be logged");
-
-// Get current level
-console.log(logger.level()); // 'error'
-```
-
-### Output Formats
-
-#### JSON Format (Default)
-
-```typescript
-const logger = new Logger({ format: "json" });
-logger.info("Hello world");
-```
-
-```json
-{
-  "level": "info",
-  "levelNumber": 2,
-  "time": "2025-06-02T12:00:00.000Z",
-  "pid": 12345,
-  "hostname": "my-computer",
-  "msg": "Hello world",
-  "callerFile": "file:///path/to/file.js",
-  "callerLine": 3
-}
-```
-
-#### Simple Format
-
-```typescript
-const logger = new Logger({ format: "simple" });
-logger.error("Something failed");
-```
-
-```
-[2025-07-04 22:50] [ERROR] [basic.js:3] Something failed
-```
-
-### Message Formatting
-
-The logger supports `util.format()` style message formatting with placeholders
-like `%s`, `%d`, `%j`.
-
-```typescript
-const logger = new Logger({ format: "json" });
-
-// String formatting
-logger.info("User %s has %d points", "john", 100);
-// Output: {"level":"info","msg":"User john has 100 points",...}
-
-// JSON formatting
-logger.info("Config: %j", { debug: true, port: 3000 });
-// Output: {"level":"info","msg":"Config: {\"debug\":true,\"port\":3000}",...}
-
-// Simple format example
+// Demo with different formatting styles
+console.log("\n=== Formats ===");
 const simpleLogger = new Logger({ format: "simple" });
-simpleLogger.warn("Processing file %s (%d bytes)", "data.txt", 1024);
-// Output: [2025-07-05 10:30] [WARN ] [app.js:15] Processing file data.txt (1024 bytes)
-```
+const jsonLogger = new Logger({ format: "json" });
+simpleLogger.warn("Warning with simple format");
+jsonLogger.warn("Warning with json format");
 
-### Custom Colors
+// Demo time format options
+console.log("\n=== Time Format ===");
+const shortTimeLogger = new Logger({ format: "simple", time: "short" });
+const longTimeLogger = new Logger({ format: "simple", time: "long" });
+shortTimeLogger.info("Short time format");
+longTimeLogger.info("Long time format");
 
-```typescript
-const logger = new Logger({
+// Demo caller level control
+console.log("\n=== Caller Level Control ===");
+// callerLevel determines at which level the stack details are shown
+const errorCallerLogger = new Logger({ format: "simple", callerLevel: "error" });
+const debugCallerLogger = new Logger({ format: "simple", callerLevel: "debug" });
+console.log("With callerLevel 'error' (only errors show caller info):");
+errorCallerLogger.info("Info without caller");
+errorCallerLogger.error("Error with caller");
+console.log("\nWith callerLevel 'debug' (all levels show caller info):");
+debugCallerLogger.info("Info with caller");
+debugCallerLogger.warn("Warning with caller");
+
+// Demo custom colors
+console.log("\n=== Custom Colors ===");
+const colorLogger = new Logger({
+  format: "simple",
   colours: {
-    error: "\x1b[31m", // Red
-    warn: "\x1b[93m", // Bright yellow
-    info: "\x1b[36m", // Cyan
-    debug: "\x1b[90m", // Dark gray
-  },
+    error: "\x1b[31m",   // Red
+    warn: "\x1b[38;2;255;255;179m", // pastel yellow (#FFFFB3)
+    info: "\x1b[36m",    // Cyan
+    debug: "\x1b[90m",   // Dark gray
+    reset: "\x1b[0m"
+  }
 });
-```
+colorLogger.error("Custom red error");
+colorLogger.warn("Custom yellow warning");
+colorLogger.info("Custom cyan info");
 
-### Caller Level Control
+// Demo production vs development patterns
+console.log("\n=== Common Usage Patterns ===");
 
-Control when caller information (file and line number) is included in log
-messages. This is useful for performance optimization since caller detection can
-be expensive.
-
-```typescript
-// Default: only include caller info for warnings and errors
-const logger = new Logger({ callerLevel: "warn" });
-
-logger.error("Critical error"); // Includes caller info
-logger.warn("Warning message"); // Includes caller info
-logger.info("Info message"); // No caller info
-logger.debug("Debug message"); // No caller info
-```
-
-**JSON Format Output:**
-
-```json
-{"level":"error","msg":"Critical error","callerFile":"/path/to/file.js","callerLine":42}
-{"level":"info","msg":"Info message"}
-```
-
-**Simple Format Output:**
-
-```
-[2025-07-04 13:13] [ERROR] [app.js:42] Critical error
-[2025-07-04 13:13] [INFO ] Info message
-```
-
-**Available callerLevel Options:**
-
-- `'silent'` - Never include caller info (best performance)
-- `'error'` - Only include caller info for errors
-- `'warn'` - Include caller info for warnings and errors (default)
-- `'info'` - Include caller info for info, warnings, and errors
-- `'debug'` - Always include caller info
-
-**Performance Tip:** For production applications that primarily log info/debug
-messages, setting `callerLevel: 'error'` can significantly improve performance
-by avoiding expensive stack trace analysis for routine logging.
-
-## Constructor Options
-
-| Option        | Type   | Default   | Description                                                                                     |
-| ------------- | ------ | --------- | ----------------------------------------------------------------------------------------------- |
-| `level`       | string | `'info'`  | Minimum log level to output (`'silent'`, `'error'`, `'warn'`, `'info'`, `'debug'`)              |
-| `format`      | string | `'json'`  | Output format (`'json'` or `'simple'`)                                                          |
-| `callerLevel` | string | `'warn'`  | Minimum log level to include caller info (`'silent'`, `'error'`, `'warn'`, `'info'`, `'debug'`) |
-| `colours`     | object | See below | Color codes for each log level                                                                  |
-| `levels`      | object | See below | Custom level names and numeric values                                                           |
-
-## Common Usage Patterns
-
-```typescript
-import Logger from "@iankulin/logger";
-
-// Production: JSON format with environment-based level
+// Production-like logger
 const prodLogger = new Logger({
-  level: Deno.env.get("LOG_LEVEL") || "info",
+  level: "info",
   format: "json",
-  callerLevel: "error", // Performance optimization
+  callerLevel: "error"
 });
 
-// Development: Simple format with debug level
+// Development-like logger
 const devLogger = new Logger({
   level: "debug",
   format: "simple",
+  callerLevel: "debug"
 });
 
-// Testing: Silent mode
-const testLogger = new Logger({ level: "silent" });
+console.log("Production logger output:");
+prodLogger.info("Application started");
+prodLogger.error("Database error occurred");
+
+console.log("\nDevelopment logger output:");
+devLogger.debug("Debug info for development");
+devLogger.info("Development info message");
 ```
 
 ## Requirements
@@ -230,6 +154,9 @@ const testLogger = new Logger({ level: "silent" });
     to JSR (JavaScript Registry)
   - Full TypeScript support
   - Native Deno compatibility
+- **1.0.1** - Minor updates
+  - Deno flavoured demo in readme
+  - Add JSDoc to boost JSR score
 
 ## AI Disclosure
 
